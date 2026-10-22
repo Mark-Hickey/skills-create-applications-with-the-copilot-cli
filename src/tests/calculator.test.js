@@ -23,6 +23,7 @@ test('supports decimal and negative operands', () => {
   assert.equal(evaluate('-8 - 2'), -10);
   assert.equal(evaluate('-3 * 4'), -12);
   assert.equal(evaluate('7 / -2'), -3.5);
+  assert.equal(evaluate('.5 + 5.'), 5.5);
 });
 
 test('applies multiplication and division before addition and subtraction', () => {
@@ -38,6 +39,7 @@ test('evaluates operators of equal precedence from left to right', () => {
 test('respects operator precedence and parentheses', () => {
   assert.equal(evaluate('2 + 3 * (4 - 1)'), 11);
   assert.equal(evaluate('(2 + 3) * 4'), 20);
+  assert.equal(evaluate('-(2 + (3 * 4))'), -14);
 });
 
 test('supports unary signs and whitespace', () => {
@@ -59,6 +61,10 @@ test('rejects empty expressions and values that are not strings', () => {
     name: 'TypeError',
     message: 'Expression must be a string',
   });
+  assert.throws(() => evaluate(null), {
+    name: 'TypeError',
+    message: 'Expression must be a string',
+  });
 });
 
 test('rejects invalid tokens and unsupported operations', () => {
@@ -71,6 +77,8 @@ test('rejects incomplete expressions and unmatched parentheses', () => {
   assert.throws(() => evaluate('2 +'), /Expected a number/);
   assert.throws(() => evaluate('(2 + 3'), /Missing closing parenthesis/);
   assert.throws(() => evaluate('2 + 3)'), /Unexpected token/);
+  assert.throws(() => evaluate('()'), /Expected a number/);
+  assert.throws(() => evaluate('2 + * 3'), /Expected a number/);
 });
 
 test('rejects results outside the finite number range', () => {
