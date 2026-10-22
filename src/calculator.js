@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 // Supported arithmetic operations: addition (+), subtraction (-),
-// multiplication (*), and division (/).
+// multiplication (*), division (/), modulo (%), exponentiation (^),
+// and square root (sqrt).
 
 function tokenize(expression) {
   const tokens = [];
-  const tokenPattern = /\s*(?:(\d+(?:\.\d*)?|\.\d+)|([()+\-*/]))/y;
+  const tokenPattern = /\s*(?:(\d+(?:\.\d*)?|\.\d+)|(sqrt)|([()+\-*/%^]))/y;
   let position = 0;
 
   while (position < expression.length) {
@@ -20,7 +21,9 @@ function tokenize(expression) {
       throw new Error(`Invalid expression near "${expression.slice(position)}"`);
     }
 
-    tokens.push(match[1] !== undefined ? Number(match[1]) : match[2]);
+    tokens.push(
+      match[1] !== undefined ? Number(match[1]) : match[2] !== undefined ? match[2] : match[3],
+    );
     position = tokenPattern.lastIndex;
   }
 
@@ -54,7 +57,33 @@ function evaluate(expression) {
       return value;
     }
 
+    if (token === 'sqrt') {
+      if (tokens[position++] !== '(') {
+        throw new Error('Expected opening parenthesis after sqrt');
+      }
+
+      const value = parseExpression();
+      if (tokens[position++] !== ')') {
+        throw new Error('Missing closing parenthesis after sqrt');
+      }
+      if (value < 0) {
+        throw new Error('Square root of a negative number');
+      }
+      return Math.sqrt(value);
+    }
+
     throw new Error('Expected a number or parenthesized expression');
+  }
+
+  function parsePower() {
+    const value = parsePrimary();
+
+    if (tokens[position] === '^') {
+      position++;
+      return value ** parseUnary();
+    }
+
+    return value;
   }
 
   function parseUnary() {
@@ -68,21 +97,26 @@ function evaluate(expression) {
       return -parseUnary();
     }
 
-    return parsePrimary();
+    return parsePower();
   }
 
   function parseTerm() {
     let value = parseUnary();
 
-    while (tokens[position] === '*' || tokens[position] === '/') {
+    while (tokens[position] === '*' || tokens[position] === '/' || tokens[position] === '%') {
       const operator = tokens[position++];
       const right = parseUnary();
 
-      if (operator === '/') {
+      if (operator === '/' || operator === '%') {
         if (right === 0) {
-          throw new Error('Division by zero');
+          throw new Error(operator === '/' ? 'Division by zero' : 'Modulo by zero');
         }
-        value /= right;
+
+        if (operator === '/') {
+          value /= right;
+        } else {
+          value %= right;
+        }
       } else {
         value *= right;
       }
@@ -120,7 +154,7 @@ if (require.main === module) {
 
   if (!expression || expression === '--help' || expression === '-h') {
     console.log('Usage: node src/calculator.js "<expression>"');
-    console.log('Supports addition (+), subtraction (-), multiplication (*), and division (/).');
+    console.log('Supports +, -, *, /, %, ^, and sqrt(...).');
     process.exitCode = expression ? 0 : 1;
   } else {
     try {
