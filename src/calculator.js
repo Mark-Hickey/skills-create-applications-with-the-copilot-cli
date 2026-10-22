@@ -4,6 +4,26 @@
 // multiplication (*), division (/), modulo (%), exponentiation (^),
 // and square root (sqrt).
 
+function modulo(a, b) {
+  if (b === 0) {
+    throw new Error('Modulo by zero');
+  }
+
+  return a % b;
+}
+
+function power(base, exponent) {
+  return base ** exponent;
+}
+
+function squareRoot(n) {
+  if (n < 0) {
+    throw new Error('Square root of a negative number');
+  }
+
+  return Math.sqrt(n);
+}
+
 function tokenize(expression) {
   const tokens = [];
   const tokenPattern = /\s*(?:(\d+(?:\.\d*)?|\.\d+)|(sqrt)|([()+\-*/%^]))/y;
@@ -66,10 +86,7 @@ function evaluate(expression) {
       if (tokens[position++] !== ')') {
         throw new Error('Missing closing parenthesis after sqrt');
       }
-      if (value < 0) {
-        throw new Error('Square root of a negative number');
-      }
-      return Math.sqrt(value);
+      return squareRoot(value);
     }
 
     throw new Error('Expected a number or parenthesized expression');
@@ -80,7 +97,7 @@ function evaluate(expression) {
 
     if (tokens[position] === '^') {
       position++;
-      return value ** parseUnary();
+      return power(value, parseUnary());
     }
 
     return value;
@@ -108,14 +125,13 @@ function evaluate(expression) {
       const right = parseUnary();
 
       if (operator === '/' || operator === '%') {
-        if (right === 0) {
-          throw new Error(operator === '/' ? 'Division by zero' : 'Modulo by zero');
-        }
-
         if (operator === '/') {
+          if (right === 0) {
+            throw new Error('Division by zero');
+          }
           value /= right;
         } else {
-          value %= right;
+          value = modulo(value, right);
         }
       } else {
         value *= right;
@@ -166,4 +182,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { evaluate };
+module.exports = { evaluate, modulo, power, squareRoot };

@@ -1,6 +1,20 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { evaluate } = require('../calculator');
+const { evaluate, modulo, power, squareRoot } = require('../calculator');
+
+test('exports modulo, power, and squareRoot operations', () => {
+  assert.equal(modulo(17, 5), 2);
+  assert.equal(modulo(-17, 5), -2);
+  assert.equal(power(2, 3), 8);
+  assert.equal(power(2, -2), 0.25);
+  assert.equal(squareRoot(9), 3);
+  assert.equal(squareRoot(0), 0);
+});
+
+test('rejects modulo by zero and square roots of negative numbers', () => {
+  assert.throws(() => modulo(4, 0), /Modulo by zero/);
+  assert.throws(() => squareRoot(-1), /Square root of a negative number/);
+});
 
 test('evaluates the addition example from the image', () => {
   assert.equal(evaluate('2 + 3'), 5);
@@ -12,6 +26,12 @@ test('evaluates the subtraction example from the image', () => {
 
 test('evaluates the multiplication example from the image', () => {
   assert.equal(evaluate('45 * 2'), 90);
+});
+
+test('evaluates the extended operations examples from the image', () => {
+  assert.equal(evaluate('5 % 2'), 1);
+  assert.equal(evaluate('2 ^ 3'), 8);
+  assert.equal(evaluate('sqrt(16)'), 4);
 });
 
 test('evaluates the division example from the image', () => {
