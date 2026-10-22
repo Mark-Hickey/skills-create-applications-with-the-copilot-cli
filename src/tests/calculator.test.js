@@ -1,6 +1,20 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { evaluate } = require('../calculator');
+const { evaluate, modulo, power, squareRoot } = require('../calculator');
+
+test('exports modulo, power, and squareRoot operations', () => {
+  assert.equal(modulo(17, 5), 2);
+  assert.equal(modulo(-17, 5), -2);
+  assert.equal(power(2, 3), 8);
+  assert.equal(power(2, -2), 0.25);
+  assert.equal(squareRoot(9), 3);
+  assert.equal(squareRoot(0), 0);
+});
+
+test('rejects modulo by zero and square roots of negative numbers', () => {
+  assert.throws(() => modulo(4, 0), /Modulo by zero/);
+  assert.throws(() => squareRoot(-1), /Square root of a negative number/);
+});
 
 test('evaluates the addition example from the image', () => {
   assert.equal(evaluate('2 + 3'), 5);
@@ -14,8 +28,34 @@ test('evaluates the multiplication example from the image', () => {
   assert.equal(evaluate('45 * 2'), 90);
 });
 
+test('evaluates the extended operations examples from the image', () => {
+  assert.equal(evaluate('5 % 2'), 1);
+  assert.equal(evaluate('2 ^ 3'), 8);
+  assert.equal(evaluate('sqrt(16)'), 4);
+});
+
 test('evaluates the division example from the image', () => {
   assert.equal(evaluate('20 / 5'), 4);
+});
+
+test('evaluates modulo with multiplication and division precedence', () => {
+  assert.equal(evaluate('17 % 5'), 2);
+  assert.equal(evaluate('20 / 5 % 3'), 1);
+  assert.equal(evaluate('2 + 10 % 4 * 3'), 8);
+});
+
+test('evaluates exponentiation with right associativity and unary signs', () => {
+  assert.equal(evaluate('2 ^ 3'), 8);
+  assert.equal(evaluate('2 ^ 3 ^ 2'), 512);
+  assert.equal(evaluate('-2 ^ 2'), -4);
+  assert.equal(evaluate('(-2) ^ 2'), 4);
+  assert.equal(evaluate('2 ^ -2'), 0.25);
+});
+
+test('evaluates square roots of expressions', () => {
+  assert.equal(evaluate('sqrt(9)'), 3);
+  assert.equal(evaluate('sqrt(2 + 7) * 2'), 6);
+  assert.equal(evaluate('sqrt(sqrt(256))'), 4);
 });
 
 test('supports decimal and negative operands', () => {
@@ -54,6 +94,18 @@ test('rejects direct and expression-based division by zero', () => {
   assert.throws(() => evaluate('1 / (3 - 3)'), /Division by zero/);
 });
 
+test('rejects modulo by zero', () => {
+  assert.throws(() => evaluate('4 % 0'), /Modulo by zero/);
+  assert.throws(() => evaluate('1 % (3 - 3)'), /Modulo by zero/);
+});
+
+test('rejects square roots of negative values and malformed function calls', () => {
+  assert.throws(() => evaluate('sqrt(-1)'), /Square root of a negative number/);
+  assert.throws(() => evaluate('sqrt(1 - 2)'), /Square root of a negative number/);
+  assert.throws(() => evaluate('sqrt 4'), /Expected opening parenthesis after sqrt/);
+  assert.throws(() => evaluate('sqrt(4'), /Missing closing parenthesis after sqrt/);
+});
+
 test('rejects empty expressions and values that are not strings', () => {
   assert.throws(() => evaluate(''), /Expression cannot be empty/);
   assert.throws(() => evaluate('   '), /Expression cannot be empty/);
@@ -69,8 +121,9 @@ test('rejects empty expressions and values that are not strings', () => {
 
 test('rejects invalid tokens and unsupported operations', () => {
   assert.throws(() => evaluate('2 + process.exit()'), /Invalid expression/);
-  assert.throws(() => evaluate('2 % 3'), /Invalid expression/);
+  assert.throws(() => evaluate('2 & 3'), /Invalid expression/);
   assert.throws(() => evaluate('2 ** 3'), /Expected a number/);
+  assert.throws(() => evaluate('squareRoot(4)'), /Invalid expression/);
 });
 
 test('rejects incomplete expressions and unmatched parentheses', () => {
